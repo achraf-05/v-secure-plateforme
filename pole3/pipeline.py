@@ -13,12 +13,31 @@ from groq import Groq
 _whisper_model: Optional[Any] = None
 
 
+def _ensure_ffmpeg_on_path(exe: str) -> None:
+    # whisper's own audio loader shells out to the literal "ffmpeg" command via
+    # PATH, so imageio_ffmpeg's oddly-named binary (e.g. ffmpeg-win-x86_64-v7.1.exe)
+    # must be exposed under the exact name "ffmpeg(.exe)" for whisper to find it.
+    alias_dir = os.path.join(tempfile.gettempdir(), "vsecure_ffmpeg_bin")
+    alias_name = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+    alias_path = os.path.join(alias_dir, alias_name)
+    if not os.path.exists(alias_path):
+        os.makedirs(alias_dir, exist_ok=True)
+        try:
+            os.link(exe, alias_path)
+        except OSError:
+            shutil.copy(exe, alias_path)
+    if alias_dir not in os.environ.get("PATH", "").split(os.pathsep):
+        os.environ["PATH"] = alias_dir + os.pathsep + os.environ.get("PATH", "")
+
+
 def _ffmpeg_exe() -> str:
     if shutil.which("ffmpeg"):
         return "ffmpeg"
     try:
         import imageio_ffmpeg
-        return imageio_ffmpeg.get_ffmpeg_exe()
+        exe = imageio_ffmpeg.get_ffmpeg_exe()
+        _ensure_ffmpeg_on_path(exe)
+        return exe
     except ImportError:
         raise RuntimeError("ffmpeg introuvable. Installez ffmpeg ou imageio-ffmpeg.")
 
@@ -34,12 +53,16 @@ def get_whisper_model() -> Any:
 def extract_audio(video_path: str) -> str:
     fd, audio_path = tempfile.mkstemp(suffix=".wav")
     os.close(fd)
+    is_hls = video_path.lower().endswith(".m3u8")
+    hls_opts = (
+        ["-allowed_extensions", "ALL", "-protocol_whitelist", "file,crypto,data,http,tcp"]
+        if is_hls else []
+    )
     try:
         subprocess.run(
             [
                 _ffmpeg_exe(), "-y",
-                "-allowed_extensions", "ALL",
-                "-protocol_whitelist", "file,crypto,data,http,tcp",
+                *hls_opts,
                 "-i", video_path,
                 "-vn", "-acodec", "pcm_s16le",
                 "-ar", "16000", "-ac", "1",
