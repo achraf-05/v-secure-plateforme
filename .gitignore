@@ -30,12 +30,13 @@ __pycache__/
 # Generated files
 # =============================================================================
 
-test.key
+# Temporary key files
+*.key
 
 # HLS generated files
 pole2/hls/*.ts
 pole2/hls/*.m3u8
-pole2/hls/enc.key
+pole2/hls/enc.key.info
 
 # Python virtual environments
 venv/
