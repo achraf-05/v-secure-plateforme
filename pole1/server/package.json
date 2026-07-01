@@ -1,0 +1,11 @@
+{
+  "name": "pole1-ws-server",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "node ws-server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.8.1"
+  }
+}

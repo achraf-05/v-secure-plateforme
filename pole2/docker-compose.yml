@@ -1,0 +1,20 @@
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./hls:/var/www/hls:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - key-server
+    restart: unless-stopped
+
+  key-server:
+    build: ./key-server
+    ports:
+      - "8001:8001"
+    environment:
+      JWT_SECRET: ${JWT_SECRET:-changeme_jwt_secret_32chars_min}
+      AES_KEY: ${AES_KEY:-}
+    restart: unless-stopped
