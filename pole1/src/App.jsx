@@ -4,19 +4,23 @@ import AnnotationCanvas from './components/AnnotationCanvas.jsx'
 import ChapterNav from './components/ChapterNav.jsx'
 import CommentFeed from './components/CommentFeed.jsx'
 import AnalyzePanel from './components/AnalyzePanel.jsx'
+import UploadPanel from './components/UploadPanel.jsx'
 import { useAnnotations } from './hooks/useAnnotations.js'
 import { useWebSocket } from './hooks/useWebSocket.js'
 import { exportToJSON } from './utils/exportAnnotations.js'
 
-const VIDEO_SRC = 'http://localhost:8080/hls/output.m3u8'
 const AUTHOR = 'User_' + Math.random().toString(36).slice(2, 6).toUpperCase()
 
 export default function App() {
   const [currentTime, setCurrentTime] = useState(0)
   const [chapters, setChapters] = useState([])
+  const [videoVersion, setVideoVersion] = useState(0)
   const playerRef = useRef(null)
+  const analyzePanelRef = useRef(null)
 
-  const { annotations, addAnnotation, updateAnnotation } = useAnnotations()
+  const VIDEO_SRC = `http://localhost:8080/hls/output.m3u8?v=${videoVersion}`
+
+  const { annotations, addAnnotation, updateAnnotation, resetAnnotations } = useAnnotations()
 
   const { comments, emitAnnotation, emitComment } = useWebSocket({
     onAnnotationCreated: addAnnotation,
@@ -34,6 +38,15 @@ export default function App() {
     addAnnotation(full)
     emitAnnotation('annotation_created', full)
   }, [addAnnotation, emitAnnotation])
+
+  const handleIngested = useCallback(() => {
+    setVideoVersion((v) => v + 1)
+    resetAnnotations()
+    setChapters([])
+    setTimeout(() => {
+      analyzePanelRef.current?.analyze()
+    }, 0)
+  }, [resetAnnotations])
 
   return (
     <div style={{
@@ -86,7 +99,8 @@ export default function App() {
         </div>
 
         <ChapterNav chapters={chapters} onSeek={handleSeek} currentTime={currentTime} />
-        <AnalyzePanel onChaptersLoaded={setChapters} />
+        <UploadPanel onIngested={handleIngested} />
+        <AnalyzePanel ref={analyzePanelRef} onChaptersLoaded={setChapters} />
 
         <button
           onClick={() => exportToJSON(annotations, VIDEO_SRC)}

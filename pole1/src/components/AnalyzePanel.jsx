@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
+import React, { useState, forwardRef, useImperativeHandle } from 'react'
 
 const ANALYZE_URL = 'http://localhost:8000/analyze/hls'
 
-export default function AnalyzePanel({ onChaptersLoaded }) {
+const AnalyzePanel = forwardRef(function AnalyzePanel({ onChaptersLoaded }, ref) {
   const [loading, setLoading] = useState(false)
   const [result, setResult] = useState(null)
   const [error, setError] = useState(null)
@@ -28,6 +28,10 @@ export default function AnalyzePanel({ onChaptersLoaded }) {
       setLoading(false)
     }
   }
+
+  useImperativeHandle(ref, () => ({
+    analyze: handleAnalyze,
+  }))
 
   return (
     <div style={{
@@ -152,4 +156,6 @@ export default function AnalyzePanel({ onChaptersLoaded }) {
       `}</style>
     </div>
   )
-}
+})
+
+export default AnalyzePanel
