@@ -43,7 +43,7 @@ ffmpeg -y \
   -hls_list_size 0 \
   -hls_key_info_file "$KEY_INFO_FILE" \
   -hls_segment_filename "$HLS_DIR/segment_%03d.ts" \
-  -hls_flags delete_segments+append_list \
+  -hls_flags independent_segments \
   "$HLS_DIR/output.m3u8"
 
-echo "HLS stream ready at http://localhost:8080/hls/output.m3u8"
+echo "HLS stream ready at http://localhost:8082/hls/output.m3u8"
