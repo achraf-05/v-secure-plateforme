@@ -20,5 +20,9 @@ export function useAnnotations() {
     setAnnotations((prev) => prev.filter((a) => a.id !== id))
   }, [])
 
-  return { annotations, addAnnotation, updateAnnotation, removeAnnotation }
+  const clearAnnotations = useCallback(() => {
+    setAnnotations([])
+  }, [])
+
+  return { annotations, addAnnotation, updateAnnotation, removeAnnotation, clearAnnotations }
 }

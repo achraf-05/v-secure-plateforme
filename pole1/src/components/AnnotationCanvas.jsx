@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react'
 
 const TOOLS = [
-  { id: 'rectangle', label: '▭', title: 'Rectangle' },
-  { id: 'arrow', label: '↗', title: 'Flèche' },
-  { id: 'text', label: 'T', title: 'Texte' },
+  { id: 'rectangle', label: 'Rectangle', title: 'Rectangle' },
+  { id: 'arrow', label: 'Flèche', title: 'Flèche' },
+  { id: 'text', label: 'Texte', title: 'Texte' },
 ]
 
 const COLORS = ['#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#ffffff']
@@ -57,7 +57,7 @@ function paintAnnotation(ctx, ann) {
   }
 }
 
-export default function AnnotationCanvas({ annotations, currentTime, onAnnotationAdd, author }) {
+export default function AnnotationCanvas({ annotations, currentTime, onAnnotationAdd, onReset, author }) {
   const canvasRef = useRef(null)
   const [tool, setTool] = useState('rectangle')
   const [color, setColor] = useState('#ef4444')
@@ -247,75 +247,124 @@ export default function AnnotationCanvas({ annotations, currentTime, onAnnotatio
         position: 'absolute',
         top: '10px',
         left: '10px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
         zIndex: 20,
-        background: 'rgba(0,0,0,0.75)',
-        backdropFilter: 'blur(6px)',
-        padding: '6px 10px',
-        borderRadius: '8px',
         pointerEvents: 'auto',
       }}>
         <button
           onClick={() => setAnnotationMode((m) => !m)}
           title={annotationMode ? 'Désactiver les annotations' : 'Activer les annotations'}
           style={{
-            padding: '4px 10px',
+            display: 'block',
+            padding: '5px 11px',
             background: annotationMode ? '#16a34a' : '#374151',
             color: '#fff',
             border: 'none',
             borderRadius: '5px',
             cursor: 'pointer',
-            fontSize: '12px',
-            fontWeight: 700,
-            letterSpacing: '0.03em',
-            marginRight: '6px',
+            fontSize: '18px',
+            lineHeight: 1,
           }}
         >
-          {annotationMode ? '✎ ON' : '✎ OFF'}
+          ✎
         </button>
 
-        {TOOLS.map((t) => (
-          <button
-            key={t.id}
-            onClick={() => setTool(t.id)}
-            title={t.title}
-            disabled={!annotationMode}
-            style={{
-              padding: '4px 10px',
-              background: tool === t.id && annotationMode ? '#2563eb' : '#1f2937',
-              color: annotationMode ? '#fff' : '#6b7280',
-              border: 'none',
-              borderRadius: '5px',
-              cursor: annotationMode ? 'pointer' : 'not-allowed',
-              fontSize: '16px',
-              lineHeight: 1,
-            }}
-          >
-            {t.label}
-          </button>
-        ))}
+        <div
+          className="annotation-panel-content"
+          data-open={annotationMode}
+          style={{ position: 'absolute', top: 'calc(100% + 8px)', left: 0, width: '150px' }}
+        >
+          <div className="annotation-panel-inner">
+            <div style={{
+              background: 'rgba(17,24,39,0.92)',
+              borderRadius: '8px',
+              padding: '8px',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '6px',
+            }}>
+              {TOOLS.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTool(t.id)}
+                  title={t.title}
+                  style={{
+                    padding: '6px 12px',
+                    background: tool === t.id ? '#2563eb' : '#1f2937',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                    fontSize: '12px',
+                    lineHeight: 1,
+                    textAlign: 'left',
+                  }}
+                >
+                  {t.label}
+                </button>
+              ))}
 
-        <div style={{ width: '1px', height: '24px', background: '#374151', margin: '0 4px' }} />
+              <button
+                onClick={() => {
+                  if (annotations.length === 0) return
+                  if (window.confirm(`Supprimer les ${annotations.length} annotation${annotations.length > 1 ? 's' : ''} ? Cette action est irréversible.`)) {
+                    onReset()
+                  }
+                }}
+                disabled={annotations.length === 0}
+                style={{
+                  padding: '6px 12px',
+                  background: annotations.length === 0 ? '#1f2937' : '#1f2de7',
+                  color: annotations.length === 0 ? '#6b7280' : '#fca5a5',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: annotations.length === 0 ? 'not-allowed' : 'pointer',
+                  fontSize: '12px',
+                  lineHeight: 1,
+                  textAlign: 'left',
+                }}
+              >
+                Réinitialiser
+              </button>
 
-        {COLORS.map((c) => (
-          <div
-            key={c}
-            onClick={() => annotationMode && setColor(c)}
-            title={c}
-            style={{
-              width: '18px',
-              height: '18px',
-              background: c,
-              borderRadius: '50%',
-              cursor: annotationMode ? 'pointer' : 'not-allowed',
-              border: color === c && annotationMode ? '2px solid #fff' : '2px solid transparent',
-              outline: color === c && annotationMode ? '1px solid #6b7280' : 'none',
-              flexShrink: 0,
-            }}
-          />
-        ))}
+              <div style={{ width: '100%', height: '1px', background: '#374151', margin: '2px 0' }} />
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                {COLORS.map((c) => (
+                  <div
+                    key={c}
+                    onClick={() => setColor(c)}
+                    title={c}
+                    style={{
+                      width: '18px',
+                      height: '18px',
+                      background: c,
+                      borderRadius: '50%',
+                      cursor: 'pointer',
+                      border: color === c ? '2px solid #fff' : '2px solid transparent',
+                      outline: color === c ? '1px solid #6b7280' : 'none',
+                      flexShrink: 0,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <style>{`
+          .annotation-panel-content {
+            display: grid;
+            grid-template-rows: 0fr;
+            transition: grid-template-rows 220ms ease;
+          }
+          .annotation-panel-content[data-open="true"] {
+            grid-template-rows: 1fr;
+          }
+          .annotation-panel-inner {
+            min-height: 0;
+            overflow: hidden;
+          }
+        `}</style>
       </div>
     </>
   )

@@ -12,7 +12,7 @@ const io = new Server(httpServer, {
   },
 })
 
-const BROADCAST_EVENTS = ['annotation_created', 'annotation_updated', 'comment_added']
+const BROADCAST_EVENTS = ['annotation_created', 'annotation_updated', 'comment_added', 'annotations_cleared']
 
 io.on('connection', (socket) => {
   console.log(`[+] Client connecté : ${socket.id}  (total : ${io.engine.clientsCount})`)
