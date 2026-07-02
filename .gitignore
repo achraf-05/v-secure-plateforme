@@ -41,6 +41,9 @@ pole2/hls/*.ts
 pole2/hls/*.m3u8
 pole2/hls/enc.key.info
 
+
+/*.mp4
+
 # Python virtual environments
 venv/
 .venv/
