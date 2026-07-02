@@ -8,7 +8,7 @@ import { useAnnotations } from './hooks/useAnnotations.js'
 import { useWebSocket } from './hooks/useWebSocket.js'
 import { exportToJSON } from './utils/exportAnnotations.js'
 
-const VIDEO_SRC = 'http://localhost:8080/hls/output.m3u8'
+const VIDEO_SRC = 'http://localhost:8082/hls/output.m3u8'
 const AUTHOR = 'User_' + Math.random().toString(36).slice(2, 6).toUpperCase()
 
 export default function App() {
