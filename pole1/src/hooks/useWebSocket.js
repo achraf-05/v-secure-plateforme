@@ -3,15 +3,17 @@ import { io } from 'socket.io-client'
 
 const WS_URL = 'http://localhost:3001'
 
-export function useWebSocket({ onAnnotationCreated, onAnnotationUpdated }) {
+export function useWebSocket({ onAnnotationCreated, onAnnotationUpdated, onAnnotationsCleared }) {
   const [comments, setComments] = useState([])
   const socketRef = useRef(null)
 
   const onAnnotationCreatedRef = useRef(onAnnotationCreated)
   const onAnnotationUpdatedRef = useRef(onAnnotationUpdated)
+  const onAnnotationsClearedRef = useRef(onAnnotationsCleared)
 
   useEffect(() => { onAnnotationCreatedRef.current = onAnnotationCreated }, [onAnnotationCreated])
   useEffect(() => { onAnnotationUpdatedRef.current = onAnnotationUpdated }, [onAnnotationUpdated])
+  useEffect(() => { onAnnotationsClearedRef.current = onAnnotationsCleared }, [onAnnotationsCleared])
 
   useEffect(() => {
     const socket = io(WS_URL, {
@@ -41,6 +43,10 @@ export function useWebSocket({ onAnnotationCreated, onAnnotationUpdated }) {
 
     socket.on('annotation_updated', (data) => {
       onAnnotationUpdatedRef.current(data)
+    })
+
+    socket.on('annotations_cleared', () => {
+      onAnnotationsClearedRef.current?.()
     })
 
     socket.on('comment_added', (data) => {

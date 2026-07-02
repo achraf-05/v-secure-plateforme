@@ -57,18 +57,7 @@ export default function AnalyzePanel({ onChaptersLoaded }) {
           onMouseEnter={(e) => { if (!loading) e.currentTarget.style.background = '#6d28d9' }}
           onMouseLeave={(e) => { if (!loading) e.currentTarget.style.background = '#7c3aed' }}
         >
-          {loading && (
-            <span style={{
-              display: 'inline-block',
-              width: '12px',
-              height: '12px',
-              border: '2px solid #9ca3af',
-              borderTopColor: 'transparent',
-              borderRadius: '50%',
-              animation: 'spin 0.8s linear infinite',
-            }} />
-          )}
-          {loading ? 'Analyse en cours…' : '⚡ Analyser la vidéo'}
+          {loading ? 'Analyse en cours…' : 'Analyser la vidéo'}
         </button>
 
         {error && (
@@ -146,10 +135,6 @@ export default function AnalyzePanel({ onChaptersLoaded }) {
           )}
         </div>
       )}
-
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   )
 }

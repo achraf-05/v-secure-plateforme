@@ -1,9 +1,9 @@
 import React, { useState, useRef, useCallback } from 'react'
 import VideoPlayer from './components/VideoPlayer.jsx'
 import AnnotationCanvas from './components/AnnotationCanvas.jsx'
-import ChapterNav from './components/ChapterNav.jsx'
 import CommentFeed from './components/CommentFeed.jsx'
 import AnalyzePanel from './components/AnalyzePanel.jsx'
+import FeatureBar from './components/FeatureBar.jsx'
 import { useAnnotations } from './hooks/useAnnotations.js'
 import { useWebSocket } from './hooks/useWebSocket.js'
 import { exportToJSON } from './utils/exportAnnotations.js'
@@ -16,11 +16,12 @@ export default function App() {
   const [chapters, setChapters] = useState([])
   const playerRef = useRef(null)
 
-  const { annotations, addAnnotation, updateAnnotation } = useAnnotations()
+  const { annotations, addAnnotation, updateAnnotation, clearAnnotations } = useAnnotations()
 
   const { comments, emitAnnotation, emitComment } = useWebSocket({
     onAnnotationCreated: addAnnotation,
     onAnnotationUpdated: updateAnnotation,
+    onAnnotationsCleared: clearAnnotations,
   })
 
   const handleSeek = useCallback((time) => {
@@ -35,13 +36,18 @@ export default function App() {
     emitAnnotation('annotation_created', full)
   }, [addAnnotation, emitAnnotation])
 
+  const handleResetAnnotations = useCallback(() => {
+    clearAnnotations()
+    emitAnnotation('annotations_cleared', {})
+  }, [clearAnnotations, emitAnnotation])
+
   return (
     <div style={{
       display: 'flex',
       height: '100vh',
       background: '#0a0a0a',
       color: '#e5e7eb',
-      fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+      fontFamily: '"Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
       overflow: 'hidden',
     }}>
       <div style={{
@@ -68,8 +74,10 @@ export default function App() {
           aspectRatio: '16 / 9',
           background: '#000',
           borderRadius: '10px',
-          overflow: 'hidden',
+          overflow: 'auto',
           boxShadow: '0 4px 24px rgba(0,0,0,0.6)',
+          minHeight: '480px',
+          resize: 'vertical',
         }}>
           <VideoPlayer
             src={VIDEO_SRC}
@@ -81,36 +89,26 @@ export default function App() {
             annotations={annotations}
             currentTime={currentTime}
             onAnnotationAdd={handleAnnotationAdd}
+            onReset={handleResetAnnotations}
             author={AUTHOR}
           />
         </div>
 
-        <ChapterNav chapters={chapters} onSeek={handleSeek} currentTime={currentTime} />
+        <FeatureBar
+          chapters={chapters}
+          onSeek={handleSeek}
+          currentTime={currentTime}
+          comments={comments}
+          annotations={annotations}
+          onExport={() => exportToJSON(annotations, VIDEO_SRC)}
+          exportCount={annotations.length}
+          onReset={handleResetAnnotations}
+        />
         <AnalyzePanel onChaptersLoaded={setChapters} />
-
-        <button
-          onClick={() => exportToJSON(annotations, VIDEO_SRC)}
-          style={{
-            alignSelf: 'flex-start',
-            padding: '8px 16px',
-            background: '#1d4ed8',
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
-            cursor: 'pointer',
-            fontSize: '13px',
-            fontWeight: 600,
-            transition: 'background 0.15s',
-          }}
-          onMouseEnter={e => e.currentTarget.style.background = '#2563eb'}
-          onMouseLeave={e => e.currentTarget.style.background = '#1d4ed8'}
-        >
-          Exporter les annotations ({annotations.length})
-        </button>
       </div>
 
       <div style={{
-        width: '360px',
+        width: '320px',
         flexShrink: 0,
         borderLeft: '1px solid #1f2937',
         padding: '16px',
